@@ -8,6 +8,7 @@ import {
   Radio,
   Settings
 } from 'lucide-react';
+import { ServerStatus } from '@/components/system/ServerStatus';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -26,10 +27,11 @@ export function Sidebar() {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
           <Radio className="h-5 w-5 text-primary-foreground" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-bold text-foreground">StreamFlow</h1>
           <p className="text-xs text-muted-foreground">Multi-Stream Manager</p>
         </div>
+        <ServerStatus />
       </div>
       
       <nav className="flex flex-col gap-1 p-4">

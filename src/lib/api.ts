@@ -106,13 +106,36 @@ export const streamsApi = {
     request<{ success: boolean; message: string }>(`/streams/${id}/stop`, { method: 'POST' }),
   
   getStatus: (id: string) => 
-    request<{ running: boolean }>(`/streams/${id}/status`),
+    request<{ running: boolean; status?: string; retryCount?: number }>(`/streams/${id}/status`),
   
   getActiveList: () => 
-    request<{ streams: string[] }>('/streams/active/list'),
+    request<{ streams: ActiveStreamInfo[] }>('/streams/active/list'),
 };
 
-// Health check
+// System API
+export const systemApi = {
+  health: () => request<SystemHealth>('/system/health'),
+  info: () => request<SystemInfo>('/system/info'),
+};
+
+// Logs API
+export const logsApi = {
+  getAll: (limit = 100, streamId?: string, level?: string) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (streamId) params.append('streamId', streamId);
+    if (level) params.append('level', level);
+    return request<LogEntry[]>(`/logs?${params}`);
+  },
+  
+  clear: (streamId?: string) => {
+    const params = streamId ? `?streamId=${streamId}` : '';
+    return request<{ success: boolean }>(`/logs${params}`, { method: 'DELETE' });
+  },
+  
+  getStats: () => request<LogStats>('/logs/stats'),
+};
+
+// Health check (legacy)
 export const healthApi = {
   check: () => request<{ status: string; timestamp: string; version: string }>('/health'),
 };
@@ -152,6 +175,9 @@ export interface Stream {
   started_at: string | null;
   ended_at: string | null;
   loop_video: boolean;
+  is_running?: boolean;
+  recovery_status?: string | null;
+  retry_count?: number;
   created_at: string;
   updated_at: string;
   video?: Video | null;
@@ -175,4 +201,69 @@ export interface CreateStreamData {
   scheduled_at?: string;
   loop_video?: boolean;
   destination_ids: string[];
+}
+
+export interface ActiveStreamInfo {
+  streamId: string;
+  status: string;
+  startedAt: string;
+  retryCount: number;
+  pid: number | null;
+}
+
+export interface SystemHealth {
+  status: 'ok' | 'error';
+  timestamp: string;
+  version: string;
+  uptime: number;
+  uptimeFormatted: string;
+  ffmpeg: 'available' | 'not found';
+  ffmpegVersion: string | null;
+  memory: {
+    rss: string;
+    heapUsed: string;
+    heapTotal: string;
+  };
+  system: {
+    platform: string;
+    arch: string;
+    cpus: number;
+    totalMemory: string;
+    freeMemory: string;
+    loadAvg: number[];
+  };
+  streams: {
+    active: number;
+    list: ActiveStreamInfo[];
+  };
+}
+
+export interface SystemInfo {
+  node: string;
+  platform: string;
+  arch: string;
+  hostname: string;
+  cpus: number;
+  memory: {
+    total: string;
+    free: string;
+    used: string;
+  };
+  uptime: {
+    system: string;
+    process: string;
+  };
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+  streamId: string | null;
+}
+
+export interface LogStats {
+  activeCount: number;
+  streams: ActiveStreamInfo[];
+  totalLogs: number;
 }
