@@ -11,7 +11,20 @@ git clone <YOUR_REPO_URL> streamflow
 cd streamflow
 
 # Run the installer
-sudo bash install.sh
+sudo bash install.sh --ip YOUR_SERVER_IP
+
+#if u get server offline error check below
+#Check production env:
+cat .env.production
+#if its not avilable create it
+cd /var/www/streamflow
+nano .env.production
+VITE_API_URL=http://YOUR_SERVER_IP/api
+npm run build
+sudo cp -r dist/* /var/www/streamflow/dist/
+sudo systemctl reload nginx
+#And reload browser or browse from incognito tab
+
 ```
 
 The installer script handles everything automatically.
