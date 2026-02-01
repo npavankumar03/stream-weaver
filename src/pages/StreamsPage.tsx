@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { StreamCard } from '@/components/streams/StreamCard';
 import { CreateStreamDialog } from '@/components/streams/CreateStreamDialog';
-import { useStreams, useUpdateStreamStatus, useDeleteStream } from '@/hooks/useStreams';
+import { useStreams, useStartStream, useStopStream, useDeleteStream, Stream } from '@/hooks/useStreams';
 import { useVideos } from '@/hooks/useVideos';
 import { useDestinations } from '@/hooks/useDestinations';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Radio } from 'lucide-react';
 import { toast } from 'sonner';
-import { Stream } from '@/types/streaming';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +28,8 @@ export default function StreamsPage() {
   const { data: streams = [], isLoading } = useStreams();
   const { data: videos = [] } = useVideos();
   const { data: destinations = [] } = useDestinations();
-  const updateStatusMutation = useUpdateStreamStatus();
+  const startMutation = useStartStream();
+  const stopMutation = useStopStream();
   const deleteMutation = useDeleteStream();
 
   const filteredStreams = streams.filter((stream) => {
@@ -42,19 +42,19 @@ export default function StreamsPage() {
 
   const handleStart = async (stream: Stream) => {
     try {
-      await updateStatusMutation.mutateAsync({ id: stream.id, status: 'live' });
-      toast.success('Stream started! (Note: Actual RTMP streaming requires backend setup)');
-    } catch (error) {
-      toast.error('Failed to start stream');
+      await startMutation.mutateAsync(stream.id);
+      toast.success('Stream started!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to start stream');
     }
   };
 
   const handleStop = async (stream: Stream) => {
     try {
-      await updateStatusMutation.mutateAsync({ id: stream.id, status: 'completed' });
+      await stopMutation.mutateAsync(stream.id);
       toast.success('Stream stopped');
-    } catch (error) {
-      toast.error('Failed to stop stream');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to stop stream');
     }
   };
 
